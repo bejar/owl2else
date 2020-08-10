@@ -22,8 +22,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="owl2else-bejar", # Replace with your own username
-    version="0.1",
+    name="owl2else", # Replace with your own username
+    version="0.2",
     author="Javier Bejar",
     author_email="bejar@cs.upc.edu",
     description="Utilities to transform ontology OWL2 files to other formats",
