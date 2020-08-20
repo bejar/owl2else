@@ -137,16 +137,21 @@ def generate_individuals_clips(individuals, f):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', default='test_prot.owl', help='Input file')
-    parser.add_argument('--output', default='practica.clp', help='Output file')
-    parser.add_argument('--format', default='turtle', choices=['xml', 'turtle'], help='File format')
+    parser.add_argument('--input',  required=True, help='Input file')
+    parser.add_argument('--output', default=None, help='Output file')
+    parser.add_argument('--format', required=True, choices=['xml', 'turtle'], help='File format')
 
     args = parser.parse_args()
+    if args.output is None:
+        out = args.input.split('.')[0]
+        out += 'clp'
+    else:
+        out = args.output
 
     g = Graph()
     g.parse(args.input, format=args.format)
 
-    f = open(args.output, 'w')
+    f = open(out, 'w')
 
     hierarchy = get_class_hierarchy(g)
 
