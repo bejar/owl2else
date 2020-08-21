@@ -69,6 +69,7 @@ class owlclass(owlobject):
         for p in props:
             pr = owlprop(p)
             pr.get_attributes_from_graph(graph)
+            pr.get_functional(graph)
             self.properties[pr.name] = pr
 
         # Properties that are in the union of a domain
@@ -83,6 +84,7 @@ class owlclass(owlobject):
                             pr = owlprop(s)
                             if pr.name not in self.properties:
                                 pr.get_attributes_from_graph(graph)
+                                pr.get_functional(graph)
                                 self.properties[pr.name] = pr
 
     def _get_union(self, uri, graph):
@@ -133,7 +135,7 @@ class owlprop(owlobject):
     """
     class for OWL properties
     """
-
+    functional = False
     def __init__(self, uriref):
         """
         Initialize the class
@@ -141,6 +143,14 @@ class owlprop(owlobject):
         super(owlprop, self).__init__(uriref)
         self.attributes[RDF.type] = ''
         self.attributes[RDFS.range] = ''
+
+    def get_functional(self, graph):
+        """
+        Checks if the property is defined as funcional (cardinality 1)
+        :param graph:
+        :return:
+        """
+        self.functional = (self.uriref, RDF.type, OWL.FunctionalProperty) in graph
 
     def __repr__(self):
         s = f'N= {self.name} '
@@ -150,7 +160,10 @@ class owlprop(owlobject):
 
     def toCLIPS(self):
         comment = self.attributes[RDFS.comment].strip("\n").strip(" ").strip("\n")
-        s = f'(multislot {self.name}'
+        if self.functional:
+            s = f'(single-slot {self.name}'
+        else:
+            s = f'(multislot {self.name}'
         if self.attributes[RDF.type] in [OWL.DatatypeProperty, OWL.FunctionalProperty]:
             if self.attributes[RDFS.range] in datatypes:
                 s += f'\n        (type {datatypes[self.attributes[RDFS.range]]})'
@@ -205,7 +218,7 @@ class owlinstance(owlobject):
         level = '    '
         comment = self.attributes[RDFS.comment].strip("\n").strip(" ").strip("\n")
 
-        s = f"({self.name} of {self.chop(self.iclass)}"
+        s = f"([{self.name}] of {self.chop(self.iclass)}"
         pr = '\n'
         for p in self.properties:
             val = self.properties[p][0]
@@ -213,9 +226,9 @@ class owlinstance(owlobject):
                 pr += f'{level}{level} ({self.chop(p)} [{self.chop(val)}])\n'
             if isinstance(val, Literal):
                 if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double]:
-                   pr += f'{level}{level} ({self.chop(p)} {val})\n'
+                    pr += f'{level}{level} ({self.chop(p)} {val})\n'
                 else:
-                   pr += f'{level}{level} ({self.chop(p)} "{val}")\n'
+                    pr += f'{level}{level} ({self.chop(p)} "{val}")\n'
 
         return f'{level};;; {comment}\n    ' + s + pr + f'{level})\n' if (
                     comment != '') else level + s + pr + f'{level})\n'
