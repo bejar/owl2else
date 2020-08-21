@@ -144,7 +144,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.output is None:
         out = args.input.split('.')[0]
-        out += 'clp'
+        out += '.clp'
     else:
         out = args.output
 

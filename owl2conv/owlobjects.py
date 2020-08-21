@@ -153,11 +153,12 @@ class owlprop(owlobject):
         s = f'(multislot {self.name}'
         if self.attributes[RDF.type] in [OWL.DatatypeProperty, OWL.FunctionalProperty]:
             if self.attributes[RDFS.range] in datatypes:
-                s += f' (type {datatypes[self.attributes[RDFS.range]]})'
+                s += f'\n        (type {datatypes[self.attributes[RDFS.range]]})'
             else:
-                s += ' (type SYMBOL)'
+                s += '\n        (type SYMBOL)'
         else:
-            s += ' (type INSTANCE)'
+            s += '\n        (type INSTANCE)'
+        s+= '\n        (create-accessor read-write)'
         return f';;; {comment}\n    ' + s + ')\n' if (comment != '') else s + ')\n'
 
 
@@ -211,7 +212,10 @@ class owlinstance(owlobject):
             if isinstance(val, URIRef):
                 pr += f'{level}{level} ({self.chop(p)} [{self.chop(val)}])\n'
             if isinstance(val, Literal):
-                pr += f'{level}{level} ({self.chop(p)} "{val}")\n'
+                if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double]:
+                   pr += f'{level}{level} ({self.chop(p)} {val})\n'
+                else:
+                   pr += f'{level}{level} ({self.chop(p)} "{val}")\n'
 
         return f'{level};;; {comment}\n    ' + s + pr + f'{level})\n' if (
                     comment != '') else level + s + pr + f'{level})\n'
