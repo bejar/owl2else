@@ -194,7 +194,7 @@ class owlinstance(owlobject):
         """
 
         iclass = graph.objects(self.uriref, RDF.type)
-        # Selects the class for the instance skiping OWL.NamedIndividual
+        # Selects the class for the instance skipping OWL.NamedIndividual
         for c in iclass:
             if c != OWL.NamedIndividual:
                 self.iclass = self.chop(c)
@@ -204,11 +204,17 @@ class owlinstance(owlobject):
             raise NameError(f"Instance [{self.name}] is not assigned to a class")
 
         jclass = cdict[self.iclass]
-        for p in jclass.properties:
-            prop = jclass.properties[p]
-            val = [v for v in graph.objects(self.uriref, prop.uriref)]
-            if len(val) != 0:
-                self.properties[prop.name] = (val[0], prop.attributes[RDFS.range])
+        lclasses = [jclass]
+        while jclass.parent is not None:
+            lclasses.append(jclass.parent)
+            jclass = jclass.parent
+
+        for jclass in lclasses:
+            for p in jclass.properties:
+                prop = jclass.properties[p]
+                val = [v for v in graph.objects(self.uriref, prop.uriref)]
+                if len(val) > 0:
+                    self.properties[prop.name] = (val, prop.attributes[RDFS.range])
 
     def toCLIPS(self):
         """
@@ -221,14 +227,17 @@ class owlinstance(owlobject):
         s = f"([{self.name}] of {self.chop(self.iclass)}"
         pr = '\n'
         for p in self.properties:
-            val = self.properties[p][0]
-            if isinstance(val, URIRef):
-                pr += f'{level}{level} ({self.chop(p)} [{self.chop(val)}])\n'
-            if isinstance(val, Literal):
-                if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double]:
-                    pr += f'{level}{level} ({self.chop(p)} {val})\n'
-                else:
-                    pr += f'{level}{level} ({self.chop(p)} "{val}")\n'
+            lval = self.properties[p][0]
+            pr += f'{level}{level} ({self.chop(p)} '
+            for val in lval:
+                if isinstance(val, URIRef):
+                    pr += f' [{self.chop(val)}]'
+                if isinstance(val, Literal):
+                    if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double]:
+                        pr += f' {val}'
+                    else:
+                        pr += f' "{val}"'
+            pr += ')\n'
 
         return f'{level};;; {comment}\n    ' + s + pr + f'{level})\n' if (
                     comment != '') else level + s + pr + f'{level})\n'
