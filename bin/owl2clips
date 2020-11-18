@@ -51,21 +51,30 @@ def get_class_hierarchy(g):
     r = g.subjects(RDF.type, OWL.Class)
 
     # get all the roots of the subClassOf relation (classes without subclasses will be missing)
-    a = find_roots(g, RDFS.subClassOf)
+    lroots = [r for r in find_roots(g, RDFS.subClassOf)]
 
     # Set of all classes on the subClassOf tree
     SCOset = set()
     roots = []
-    for p in a:
+    for p in lroots:
         t = get_tree(g, p, RDFS.subClassOf)
         roots.append(t)
         tl = tree_to_list(t)
         for l in tl:
             SCOset.add(l)
 
-    for c in r:
-        if (type(c) == URIRef) and (c not in SCOset):
-            roots.append((c, []))
+    if len(lroots) == 1 and lroots[0] == OWL.Thing:
+        # owl:Thing is the top of the hierarchy but there are classes that
+        # are not a subclass of owl:Thing
+        lr = roots[0][1]
+        for c in r:
+           if (type(c) == URIRef) and (c not in SCOset):
+               lr.append((c, []))
+        roots = [(roots[0][0], lr)]
+    else:
+        for c in r:
+            if (type(c) == URIRef) and (c not in SCOset):
+                roots.append((c, []))
 
     return roots
 
@@ -155,6 +164,7 @@ if __name__ == '__main__':
 
     hierarchy = get_class_hierarchy(g)
 
+    # owl:Thing is the top of the hierarchy, so we skip it
     if hierarchy[0][0] == OWL.Thing:
         hierarchy = hierarchy[0][1]
 
