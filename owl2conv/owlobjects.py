@@ -6,7 +6,7 @@ owlobjects
 
 :Description: owlobjects
 
-    Classes for different owl objects
+    Classes for representing owl objects
 
 :Authors:
     bejar
@@ -137,6 +137,7 @@ class owlprop(owlobject):
     class for OWL properties
     """
     functional = False
+
     def __init__(self, uriref):
         """
         Initialize the class
@@ -193,7 +194,6 @@ class owlinstance(owlobject):
         :param cdict:
         :return:
         """
-
         iclass = graph.objects(self.uriref, RDF.type)
         # Selects the class for the instance skipping OWL.NamedIndividual
         for c in iclass:

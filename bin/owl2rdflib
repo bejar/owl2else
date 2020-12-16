@@ -1,0 +1,87 @@
+#!/usr/bin/python
+"""
+.. module:: owl2rdflib
+
+owl2rdflib
+******
+
+:Description: owl2rdflib
+
+    Generates a python file with a RDFlib Namespace object with the classes and attributes of a owl file
+
+:Authors:
+    bejar
+
+:Version:
+
+:Date:  16/12/2020
+"""
+
+__author__ = 'bejar'
+
+import argparse
+
+from rdflib import Graph, Namespace
+from rdflib import RDFS, RDF, OWL, URIRef
+import time
+
+
+def chop(uriref):
+    if '#' in uriref:
+        return uriref.toPython().split("#")[-1]
+    elif '/' in uriref:
+        return uriref.toPython().split("/")[-1]
+    else:
+        return uriref
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input', required=True, help='Input file')
+    parser.add_argument('--output', default=None, help='Output file')
+    parser.add_argument('--format', required=True, choices=['xml', 'turtle'], help='File format')
+
+    args = parser.parse_args()
+    out = args.output + '.py'
+
+    g = Graph()
+
+    g.parse(args.input, format=args.format)
+
+    cls = [chop(c) for c in g.subjects(RDF.type, OWL.Class) if c != OWL.Thing and isinstance(c, URIRef)]
+    opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef) ]
+    dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty)if isinstance(c, URIRef)]
+
+
+
+    onto = [c for c in g.subjects(RDF.type, OWL.Ontology)]
+
+    f = open(out, 'w')
+    f.write("\"\"\"\n")
+    f.write(f".. module:: {args.output}\n")
+    f.write(f"\n Translated by owl2rflib\n")
+    f.write(f"\n Translated to RDFlib from ontology {onto[0].toPython()}\n")
+    f.write(f"\n :Date {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}\n")
+
+    f.write("\"\"\"\n")
+    f.write("from rdflib import URIRef\n")
+    f.write("from rdflib.namespace import ClosedNamespace\n")
+
+    f.write("\n")
+    f.write(f"{args.output.upper()} =  ClosedNamespace(\n")
+    f.write(f"    uri=URIRef('{onto[0].toPython()}'),\n")
+    f.write(f"    terms=[\n")
+    f.write(f"        # Classes\n")
+    for n in cls:
+        f.write(f"        '{n}',\n")
+    f.write(f"        # Object properties\n")
+    for n in opr:
+        f.write(f"        '{n}',\n")
+    f.write(f"        # Data properties\n")
+    for n in dpr[:-1]:
+        f.write(f"        '{n}',\n")
+    f.write(f"        '{dpr[-1]}'\n")
+    f.write(f"    ]\n")
+    f.write(f")\n")
+
+    f.close()

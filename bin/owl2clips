@@ -1,11 +1,11 @@
 #!/usr/bin/python
 """
-.. module:: owl2conv
+.. module:: owl2clips
 
-owl2else
+owl2clips
 ******
 
-:Description: owl2conv
+:Description: owl2clips
 
     Transforms an OWL ontology to COOL CLIPS Language
 
