@@ -20,19 +20,42 @@ owl2rdflib
 __author__ = 'bejar'
 
 import argparse
-
-from rdflib import Graph, Namespace
-from rdflib import RDFS, RDF, OWL, URIRef
 import time
+
+from rdflib import Graph, RDF, OWL, URIRef
 
 
 def chop(uriref):
+    """
+    returns the last part of the uriref
+    :param uriref:
+    :return:
+    """
     if '#' in uriref:
         return uriref.toPython().split("#")[-1]
     elif '/' in uriref:
         return uriref.toPython().split("/")[-1]
     else:
         return uriref
+
+
+def print_vocabulary(f, voc, last):
+    """
+    Print the terms in the list
+
+    :param f:
+    :param voc:
+    :param last:
+    :return:
+    """
+    if voc != []:
+        if last:
+            for n in voc[:-1]:
+                f.write(f"        '{n}',\n")
+            f.write(f"        '{voc[-1]}'\n")
+        else:
+            for n in voc:
+                f.write(f"        '{n}',\n")
 
 
 if __name__ == '__main__':
@@ -52,8 +75,8 @@ if __name__ == '__main__':
     g.parse(args.input, format=args.format)
 
     cls = [chop(c) for c in g.subjects(RDF.type, OWL.Class) if c != OWL.Thing and isinstance(c, URIRef)]
-    opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef) ]
-    dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty)if isinstance(c, URIRef)]
+    opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef)]
+    dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty) if isinstance(c, URIRef)]
 
     onto = [c for c in g.subjects(RDF.type, OWL.Ontology)]
 
@@ -73,15 +96,11 @@ if __name__ == '__main__':
     f.write(f"    uri=URIRef('{onto[0].toPython()}'),\n")
     f.write(f"    terms=[\n")
     f.write(f"        # Classes\n")
-    for n in cls:
-        f.write(f"        '{n}',\n")
-    f.write(f"        # Object properties\n")
-    for n in opr:
-        f.write(f"        '{n}',\n")
-    f.write(f"        # Data properties\n")
-    for n in dpr[:-1]:
-        f.write(f"        '{n}',\n")
-    f.write(f"        '{dpr[-1]}'\n")
+    print_vocabulary(f, cls, opr == [] and dpr == [])
+    f.write(f"\n        # Object properties\n")
+    print_vocabulary(f, opr, dpr == [])
+    f.write(f"\n        # Data properties\n")
+    print_vocabulary(f, dpr, True)
     f.write(f"    ]\n")
     f.write(f")\n")
 
