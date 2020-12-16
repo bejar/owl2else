@@ -42,7 +42,10 @@ if __name__ == '__main__':
     parser.add_argument('--format', required=True, choices=['xml', 'turtle'], help='File format')
 
     args = parser.parse_args()
-    out = args.output + '.py'
+    if args.output is None:
+        out = args.input.split('.')[0]
+    else:
+        out = args.output
 
     g = Graph()
 
@@ -52,11 +55,9 @@ if __name__ == '__main__':
     opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef) ]
     dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty)if isinstance(c, URIRef)]
 
-
-
     onto = [c for c in g.subjects(RDF.type, OWL.Ontology)]
 
-    f = open(out, 'w')
+    f = open(out + '.py', 'w')
     f.write("\"\"\"\n")
     f.write(f".. module:: {args.output}\n")
     f.write(f"\n Translated by owl2rflib\n")
