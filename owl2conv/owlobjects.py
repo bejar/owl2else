@@ -23,6 +23,7 @@ datatypes = {XSD.string: 'STRING',
              XSD.integer: 'INTEGER',
              XSD.int: 'INTEGER',
              XSD.float: 'FLOAT',
+             XSD.decimal: 'FLOAT',
              XSD.double: 'FLOAT'}
 
 
@@ -218,7 +219,7 @@ class owlinstance(owlobject):
 
     def toCLIPS(self):
         """
-        Generate the CLIPS representation for an instacd
+        Generate the CLIPS representation for an instace
         :return:
         """
         level = '    '
@@ -233,7 +234,7 @@ class owlinstance(owlobject):
                 if isinstance(val, URIRef):
                     pr += f' [{self.chop(val)}]'
                 if isinstance(val, Literal):
-                    if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double]:
+                    if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double, XSD.decimal]:
                         pr += f' {val}'
                     else:
                         pr += f' "{val}"'
