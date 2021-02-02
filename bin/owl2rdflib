@@ -83,7 +83,7 @@ if __name__ == '__main__':
     f = open(out + '.py', 'w')
     f.write("\"\"\"\n")
     f.write(f".. module:: {out}\n")
-    f.write(f"\n Translated by owl2rflib\n")
+    f.write(f"\n Translated by owl2rdflib\n")
     f.write(f"\n Translated to RDFlib from ontology {onto[0].toPython()}\n")
     f.write(f"\n :Date {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}\n")
 
