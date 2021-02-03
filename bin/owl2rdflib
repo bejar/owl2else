@@ -68,7 +68,7 @@ if __name__ == '__main__':
     if args.output is None:
         out = args.input.split('.')[0]
     else:
-        out = args.output
+        out = args.output.split('.')[0]
 
     g = Graph()
 
@@ -77,6 +77,7 @@ if __name__ == '__main__':
     cls = [chop(c) for c in g.subjects(RDF.type, OWL.Class) if c != OWL.Thing and isinstance(c, URIRef)]
     opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef)]
     dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty) if isinstance(c, URIRef)]
+    inst = [chop(c) for c in g.subjects(RDF.type, OWL.NamedIndividual) if isinstance(c, URIRef)]
 
     onto = [c for c in g.subjects(RDF.type, OWL.Ontology)]
 
@@ -96,11 +97,13 @@ if __name__ == '__main__':
     f.write(f"    uri=URIRef('{onto[0].toPython()}'),\n")
     f.write(f"    terms=[\n")
     f.write(f"        # Classes\n")
-    print_vocabulary(f, cls, opr == [] and dpr == [])
+    print_vocabulary(f, cls, opr == [] and dpr == [] and inst == [])
     f.write(f"\n        # Object properties\n")
-    print_vocabulary(f, opr, dpr == [])
+    print_vocabulary(f, opr, dpr == [] and inst == [])
     f.write(f"\n        # Data properties\n")
-    print_vocabulary(f, dpr, True)
+    print_vocabulary(f, dpr, inst == [])
+    f.write(f"\n        # Named Individuals\n")
+    print_vocabulary(f, inst, True)
     f.write(f"    ]\n")
     f.write(f")\n")
 
