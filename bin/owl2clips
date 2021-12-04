@@ -161,6 +161,8 @@ if __name__ == '__main__':
     g = Graph()
     g.parse(args.input, format=args.format)
 
+    print(f'OWL2CLIPS: translating {args.input} to CLIPS ...')
+
     f = open(out, 'w')
 
     f.write(f";;; ---------------------------------------------------------\n")
