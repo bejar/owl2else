@@ -23,7 +23,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="owl2else", # Replace with your own username
-    version="0.6.9",
+    version="0.7.2",
     author="Javier Bejar",
     author_email="bejar@cs.upc.edu",
     description="Utilities to transform ontology OWL2 files to other formats",

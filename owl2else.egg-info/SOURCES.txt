@@ -1,0 +1,13 @@
+LICENSE
+README.md
+setup.cfg
+setup.py
+bin/owl2clips
+bin/owl2rdflib
+owl2conv/__init__.py
+owl2conv/owlobjects.py
+owl2else.egg-info/PKG-INFO
+owl2else.egg-info/SOURCES.txt
+owl2else.egg-info/dependency_links.txt
+owl2else.egg-info/requires.txt
+owl2else.egg-info/top_level.txt
