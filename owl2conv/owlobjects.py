@@ -182,7 +182,7 @@ class owlprop(owlobject):
             name = self.name
         name = name.replace(' ', '_')
         if self.functional:
-            s = f'(single-slot {name}'
+            s = f'(slot {name}'
         else:
             s = f'(multislot {name}'
         if self.attributes[RDF.type] in [OWL.DatatypeProperty, OWL.FunctionalProperty]:
