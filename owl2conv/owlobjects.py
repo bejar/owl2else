@@ -113,12 +113,12 @@ class owlclass(owlobject):
 
         return s
 
-    def toCLIPS(self):
+    def toCLIPS(self, labels):
         """
         Generates a representation of the class using COOL CLIPS language
         :return:
         """
-        if RDFS.label in self.attributes:
+        if RDFS.label in self.attributes and labels:
             name = self.attributes[RDFS.label]
             if name  == '':
                 name = self.name
@@ -130,7 +130,7 @@ class owlclass(owlobject):
         if self.parent is None:
             s += '    (is-a USER)\n'
         else:
-            if  RDFS.label in self.parent.attributes:
+            if  RDFS.label in self.parent.attributes  and labels:
                 pname = self.parent.attributes[RDFS.label]
                 if pname  == '':
                     pname = self.parent.name
@@ -140,7 +140,7 @@ class owlclass(owlobject):
             s += f'    (is-a {pname})\n'
         s += '    (role concrete)\n    (pattern-match reactive)\n'
         for p in self.properties:
-            s += '    ' + self.properties[p].toCLIPS()
+            s += '    ' + self.properties[p].toCLIPS(labels)
 
         s += ')\n'
         return s
@@ -174,9 +174,9 @@ class owlprop(owlobject):
             s += f'{self.chop(a)} = {self.chop(self.attributes[a])} '
         return s
 
-    def toCLIPS(self):
+    def toCLIPS(self, labels=False):
         comment = self.attributes[RDFS.comment].strip("\n").strip(" ").strip("\n")
-        if RDFS.label in self.attributes:
+        if RDFS.label in self.attributes and labels:
             name = self.attributes[RDFS.label]
         else:
             name = self.name
@@ -236,14 +236,14 @@ class owlinstance(owlobject):
                 if len(val) > 0:
                     self.properties[prop.name] = (val, prop.attributes[RDFS.range])
 
-    def toCLIPS(self):
+    def toCLIPS(self, labels=False):
         """
         Generate the CLIPS representation for an instace
         :return:
         """
         level = '    '
         comment = self.attributes[RDFS.comment].strip("\n").strip(" ").strip("\n")
-        if RDFS.label in self.attributes:
+        if RDFS.label in self.attributes and labels:
             name = self.attributes[RDFS.label]
         else:
             name = self.name  

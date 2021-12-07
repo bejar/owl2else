@@ -115,7 +115,7 @@ def get_individuals(g, cdict):
     return lins
 
 
-def generate_classes_clips(hierarchy, clipsfile):
+def generate_classes_clips(hierarchy, clipsfile, labels):
     """
     Generates and writes the classes to a file using CLIPS syntas
     :param hierarchy:
@@ -123,16 +123,16 @@ def generate_classes_clips(hierarchy, clipsfile):
     :return:
     """
 
-    clipsfile.write(hierarchy[0].toCLIPS())
+    clipsfile.write(hierarchy[0].toCLIPS(labels))
     clipsfile.write("\n")
     lclass = []
     for h in hierarchy[1]:
-        lclass.extend(generate_classes_clips(h, clipsfile))
+        lclass.extend(generate_classes_clips(h, clipsfile, labels))
     lclass.extend([hierarchy[0]])
     return lclass
 
 
-def generate_individuals_clips(individuals, f):
+def generate_individuals_clips(individuals, f, labels):
     """
     Generates all the individuals and writes them to a file in CLIPS syntax
     :param individuals:
@@ -140,7 +140,7 @@ def generate_individuals_clips(individuals, f):
     """
     f.write("(definstances instances\n")
     for i in individuals:
-        f.write(i.toCLIPS())
+        f.write(i.toCLIPS(labels))
         f.write("\n")
     f.write(")\n")
 
@@ -150,7 +150,8 @@ if __name__ == '__main__':
     parser.add_argument('--input',  required=True, help='Input file')
     parser.add_argument('--output', default=None, help='Output file')
     parser.add_argument('--format', required=True, choices=['xml', 'turtle'], help='File format')
-
+    parser.add_argument('--labels',  action='store_true', default=False, help='use labels for generating names')
+ 
     args = parser.parse_args()
     if args.output is None:
         out = args.input.split('.')[0]
@@ -181,12 +182,12 @@ if __name__ == '__main__':
     classes_dict = {}
     for h in hierarchy:
         ch = build_hierarchy(g, h)
-        lclass = generate_classes_clips(ch, f)
+        lclass = generate_classes_clips(ch, f, args.labels)
         for c in lclass:
             classes_dict[c.name] = c
 
     individuals = get_individuals(g, classes_dict)
 
-    generate_individuals_clips(individuals, f)
+    generate_individuals_clips(individuals, f, args.labels)
 
     f.close()
