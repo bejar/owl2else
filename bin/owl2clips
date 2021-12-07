@@ -117,7 +117,7 @@ def get_individuals(g, cdict):
 
 def generate_classes_clips(hierarchy, clipsfile, labels):
     """
-    Generates and writes the classes to a file using CLIPS syntas
+    Generates and writes the classes to a file using CLIPS syntax
     :param hierarchy:
     :param clipsfile:
     :return:
