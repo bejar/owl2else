@@ -248,11 +248,11 @@ class owlinstance(owlobject):
         else:
             name = self.name  
         name = name.replace(' ', '_') 
-        s = f"([{name}] of {self.chop(self.iclass)}"
+        s = f"([{name}] of {self.iclass}"
         pr = '\n'
         for p in self.properties:
             lval = self.properties[p][0]
-            pr += f'{level}{level} ({self.chop(p)} '
+            pr += f'{level}{level} ({p} '
             for val in lval:
                 if isinstance(val, URIRef):
                     pr += f' [{self.chop(val)}]'
