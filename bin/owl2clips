@@ -132,7 +132,7 @@ def generate_classes_clips(hierarchy, clipsfile, labels):
     return lclass
 
 
-def generate_individuals_clips(individuals, f, labels):
+def generate_individuals_clips(individuals, f, graph, labels):
     """
     Generates all the individuals and writes them to a file in CLIPS syntax
     :param individuals:
@@ -140,7 +140,7 @@ def generate_individuals_clips(individuals, f, labels):
     """
     f.write("(definstances instances\n")
     for i in individuals:
-        f.write(i.toCLIPS(labels))
+        f.write(i.toCLIPS(graph, labels))
         f.write("\n")
     f.write(")\n")
 
@@ -188,6 +188,6 @@ if __name__ == '__main__':
 
     individuals = get_individuals(g, classes_dict)
 
-    generate_individuals_clips(individuals, f, args.labels)
+    generate_individuals_clips(individuals, f, g, args.labels)
 
     f.close()

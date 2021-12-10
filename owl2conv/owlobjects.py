@@ -26,6 +26,12 @@ datatypes = {XSD.string: 'STRING',
              XSD.decimal: 'FLOAT',
              XSD.double: 'FLOAT'}
 
+def get_label(uri, graph):
+    label = None
+    name = graph.objects(uri, RDFS.label)
+    for n in name:
+            label = n    
+    return label
 
 class owlobject:
     def __init__(self, uriref):
@@ -204,6 +210,7 @@ class owlinstance(owlobject):
         """
         super(owlinstance, self).__init__(uriref)
         self.iclass = None
+        self.iclass_label = None 
         self.properties = {}
 
     def get_info_from_graph(self, graph, cdict):
@@ -214,10 +221,16 @@ class owlinstance(owlobject):
         :return:
         """
         iclass = graph.objects(self.uriref, RDF.type)
+
         # Selects the class for the instance skipping OWL.NamedIndividual
         for c in iclass:
             if c != OWL.NamedIndividual:
                 self.iclass = self.chop(c)
+                curi = c
+
+        iclass_name = graph.objects(curi, RDFS.label)
+        for n in iclass_name:
+            self.iclass_label = n.replace(' ', '_') 
 
         # If individual has no class something is wrong
         if self.iclass is None:
@@ -234,9 +247,10 @@ class owlinstance(owlobject):
                 prop = jclass.properties[p]
                 val = [v for v in graph.objects(self.uriref, prop.uriref)]
                 if len(val) > 0:
-                    self.properties[prop.name] = (val, prop.attributes[RDFS.range])
+                    label = get_label(prop.uriref, graph)
+                    self.properties[prop.name] = (val, prop.attributes[RDFS.range], label.replace(' ', '_'))
 
-    def toCLIPS(self, labels=False):
+    def toCLIPS(self, graph, labels=False):
         """
         Generate the CLIPS representation for an instace
         :return:
@@ -248,14 +262,21 @@ class owlinstance(owlobject):
         else:
             name = self.name  
         name = name.replace(' ', '_') 
-        s = f"([{name}] of {self.iclass}"
+        s = f"([{name}] of {self.iclass_label}"
         pr = '\n'
         for p in self.properties:
             lval = self.properties[p][0]
-            pr += f'{level}{level} ({p} '
+            if self.properties[p][0] is not None:
+                pr += f'{level}{level} ({self.properties[p][2]} '
+            else:
+                pr += f'{level}{level} ({p} '
             for val in lval:
                 if isinstance(val, URIRef):
-                    pr += f' [{self.chop(val)}]'
+                    iname = get_label(val, graph)
+                    if iname is not None:
+                        pr += f" [{iname.replace(' ', '_') }]"
+                    else:
+                        pr += f' [{self.chop(val)}]'
                 if isinstance(val, Literal):
                     if val.datatype in [XSD.integer, XSD.int, XSD.float, XSD.double, XSD.decimal]:
                         pr += f' {val}'
