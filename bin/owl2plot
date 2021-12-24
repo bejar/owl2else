@@ -1,0 +1,172 @@
+#!/usr/bin/python
+"""
+.. module:: owl2plot
+
+owl2clips
+******
+
+:Description: owl2plot
+
+    Transforms an OWL ontology to a plot using the graphviz library
+
+:Authors:
+    bejar
+
+:Version: 
+
+:Date:  24/12/2021
+"""
+__author__ = 'bejar'
+
+import argparse
+
+from rdflib import Graph
+from rdflib import RDFS, RDF, OWL, URIRef
+from rdflib.util import find_roots, get_tree
+import graphviz as gv
+import time
+
+from owl2conv.owlobjects import owlclass, owlinstance
+
+def tree_to_list(tree):
+    """
+    Transforms a tree structure on a list recursivelly
+    :return:
+    """
+    root = [tree[0]]
+    if tree[1] is not []:
+        descendants = [tree_to_list(l) for l in tree[1]]
+    for f in descendants:
+        root.extend(f)
+    return root
+
+
+def get_class_hierarchy(g):
+    """
+    Extract the class hierarchy
+
+    :return:
+    """
+    # get all the classes
+    r = g.subjects(RDF.type, OWL.Class)
+
+    # get all the roots of the subClassOf relation (classes without subclasses will be missing)
+    lroots = [r for r in find_roots(g, RDFS.subClassOf)]
+
+    # Set of all classes on the subClassOf tree
+    SCOset = set()
+    roots = []
+    for p in lroots:
+        t = get_tree(g, p, RDFS.subClassOf)
+        roots.append(t)
+        tl = tree_to_list(t)
+        for l in tl:
+            SCOset.add(l)
+
+    if len(lroots) == 1 and lroots[0] == OWL.Thing:
+        # owl:Thing is the top of the hierarchy but there are classes that
+        # are not a subclass of owl:Thing
+        lr = roots[0][1]
+        for c in r:
+           if (type(c) == URIRef) and (c not in SCOset):
+               lr.append((c, []))
+        roots = [(roots[0][0], lr)]
+    else:
+        for c in r:
+            if (type(c) == URIRef) and (c not in SCOset):
+                roots.append((c, []))
+
+    return roots
+
+
+def build_hierarchy(g, tree):
+    """
+    Creates the properties of each class
+    :param trees:
+    :return:
+    """
+    root = tree[0]
+    node = owlclass(root)
+    node.get_attributes_from_graph(g)
+    node.get_properties_from_graph(g)
+    desc = [build_hierarchy(g, n) for n in tree[1]]
+    for d in desc:
+        d[0].parent = node
+
+    return [node, desc]
+
+def generate_classes_plot(hierarchy, graph, labels, classes):
+    """
+    Creates the graphviz graph for a hierarchy
+
+    :param hierarchy:
+    :param graph:
+    :param labels:
+    :return:
+    """
+    parent, plabel, links = hierarchy[0].node_text(labels)
+    if  (classes is None) or (str(parent) in classes):
+        if links is not []:
+            for name, nodes in links:
+                for n in nodes:
+                    graph.edge(parent, n+':l', label=name, color='red')
+        graph.node(parent, label=plabel)
+        for h in hierarchy[1]:
+            sibl, _, _ = h[0].node_text(labels)
+            graph.edge(parent, sibl, label='is-a')
+            generate_classes_plot(h, graph, labels, None)
+        return True
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input',  required=True, help='Input file')
+    parser.add_argument('--output', default=None, help='Output file')
+    parser.add_argument('--format', required=True, choices=['xml', 'turtle'], help='File format')
+    parser.add_argument('--gformat', default='pdf', choices=['pdf', 'png', 'jpg', 'svg'], help='output format')
+    parser.add_argument('--labels',  action='store_true', default=False, help='use labels for generating names')
+    parser.add_argument('--dot',  action='store_true', default=False, help='keep dot file')
+    parser.add_argument('--topclass',  default=None, help='Plot only a top class')
+ 
+    args = parser.parse_args()
+
+    gformat = args.gformat
+
+    if args.output is None:
+        out = args.input.split('.')[0]
+    else:
+        out = args.output
+        if '.' in args.output:
+            out, gformat = args.output.split('.')
+
+    g = Graph()
+    g.parse(args.input, format=args.format)
+
+    print(f'OWL2PLOT: generating plot from {args.input} ...')
+
+    hierarchy = get_class_hierarchy(g)
+
+    # owl:Thing is the top of the hierarchy, so we skip it
+    if hierarchy[0][0] == OWL.Thing:
+        hierarchy = hierarchy[0][1]
+
+
+    u = gv.Digraph(out, format=gformat, 
+           graph_attr = {'rankdir':'LR', 'concentrate':'true'}, 
+           node_attr={'color': 'lightblue2',  'shape':'record'})    
+
+    classes_dict = {}
+    exists = False
+    for h in hierarchy:
+        if h[0][0] == OWL.Thing:
+            h = h[0][1]
+
+        ch = build_hierarchy(g, h)
+        ex = generate_classes_plot(ch, u, args.labels, args.topclass)
+        exists = exists or ex
+
+    if exists:
+        u.unflatten(stagger=3).render(outfile=f'{out}.{gformat}',  cleanup=not args.dot, quiet=True)
+    else:
+        print('OWL2PLOT: Top class does not exists')
+

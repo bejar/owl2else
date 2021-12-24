@@ -77,8 +77,9 @@ class owlclass(owlobject):
             pr = owlprop(p)
             pr.get_attributes_from_graph(graph)
             pr.get_functional(graph)
+            pr.adjust_range(graph)
             self.properties[pr.name] = pr
-
+        
         # Properties that are in the union of a domain
         props = graph.subject_objects(RDFS.domain)
         for s, o in props:
@@ -118,6 +119,32 @@ class owlclass(owlobject):
             s += f'\n PR= {p.__repr__()} '
 
         return s
+
+    def node_text(self, labels):
+        if RDFS.label in self.attributes and labels:
+            name = self.attributes[RDFS.label]
+            if name  == '':
+                name = self.name
+        else:
+            name = self.name    
+
+        nlabel =  f' <l> {name}'
+        lp = len(self.properties)
+        props = ''
+        links = []
+        prope = False
+        for i, p in enumerate(self.properties):
+            prop = self.properties[p].node_text(labels)
+            if 'link' in prop: 
+                links.append((prop['name'], prop['link']))
+            else:
+                prope = True
+                props += '{ '+ prop['name'] + ' |' + prop['type'] +'}'
+                if i<lp-1:
+                    props += '|'
+        if prope:
+            nlabel += ' | ' + props
+        return name, nlabel, links       
 
     def toCLIPS(self, labels):
         """
@@ -174,11 +201,39 @@ class owlprop(owlobject):
         """
         self.functional = (self.uriref, RDF.type, OWL.FunctionalProperty) in graph
 
+    def adjust_range(self, graph):
+        if self.attributes[RDF.type] not in [OWL.DatatypeProperty, OWL.FunctionalProperty]:
+            ranges = graph.objects(self.uriref, RDFS.range)
+            lranges = []
+            for r in ranges:
+                lab = graph.value(r, RDFS.label)
+                if lab is not None:
+                    lranges.append(self.chop(lab))
+
+            self.attributes[RDFS.range] = lranges
+
     def __repr__(self):
         s = f'N= {self.name} '
         for a in self.attributes:
             s += f'{self.chop(a)} = {self.chop(self.attributes[a])} '
         return s
+
+    def node_text(self, labels):
+        text = {}
+        if RDFS.label in self.attributes and labels:
+            text['name'] = self.attributes[RDFS.label].replace(' ', '_')
+        else:
+            text['name'] = self.name.replace(' ', '_')
+           
+        if self.attributes[RDF.type] in [OWL.DatatypeProperty, OWL.FunctionalProperty]:
+            if self.attributes[RDFS.range] in datatypes:
+                text['type'] = datatypes[self.attributes[RDFS.range]]
+            else:
+                text['type'] = 'SYMBOL'
+        else:
+            text['link'] = self.attributes[RDFS.range]
+        
+        return text
 
     def toCLIPS(self, labels=False):
         comment = self.attributes[RDFS.comment].strip("\n").strip(" ").strip("\n")

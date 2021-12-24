@@ -23,7 +23,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="owl2else", # Replace with your own username
-    version="0.7.7",
+    version="0.8.0",
     author="Javier Bejar",
     author_email="bejar@cs.upc.edu",
     description="Utilities to transform ontology OWL2 files to other formats",
@@ -31,7 +31,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/bejar/owl2else",
     packages=['owl2conv'],
-    scripts=['bin/owl2clips', 'bin/owl2rdflib'],
+    scripts=['bin/owl2clips', 'bin/owl2rdflib', 'bin/owl2plot'],
     install_requires=['rdflib'],
     classifiers=[
         "Programming Language :: Python :: 3",
