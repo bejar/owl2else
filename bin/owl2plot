@@ -24,9 +24,8 @@ from rdflib import Graph
 from rdflib import RDFS, RDF, OWL, URIRef
 from rdflib.util import find_roots, get_tree
 import graphviz as gv
-import time
 
-from owl2conv.owlobjects import owlclass, owlinstance
+from owl2conv.owlobjects import owlclass
 
 def tree_to_list(tree):
     """
@@ -113,7 +112,7 @@ def generate_classes_plot(hierarchy, graph, labels, classes):
         graph.node(parent, label=plabel)
         for h in hierarchy[1]:
             sibl, _, _ = h[0].node_text(labels)
-            graph.edge(parent, sibl, label='is-a')
+            graph.edge(sibl, parent, label='is-a')
             generate_classes_plot(h, graph, labels, None)
         return True
 
