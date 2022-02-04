@@ -134,6 +134,7 @@ class owlclass(owlobject):
         links = []
         prope = False
         for i, p in enumerate(self.properties):
+            
             prop = self.properties[p].node_text(labels)
             if 'link' in prop: 
                 links.append((prop['name'], prop['link']))
@@ -209,6 +210,8 @@ class owlprop(owlobject):
                 lab = graph.value(r, RDFS.label)
                 if lab is not None:
                     lranges.append(self.chop(lab))
+                else:
+                    lranges.append(self.chop(r))
 
             self.attributes[RDFS.range] = lranges
 
