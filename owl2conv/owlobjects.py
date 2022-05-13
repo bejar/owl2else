@@ -306,6 +306,8 @@ class owlinstance(owlobject):
                 val = [v for v in graph.objects(self.uriref, prop.uriref)]
                 if len(val) > 0:
                     label = get_label(prop.uriref, graph)
+                    if label is None:
+                        label = self.chop(prop.uriref)
                     self.properties[prop.name] = (val, prop.attributes[RDFS.range], label.replace(' ', '_'))
 
     def toCLIPS(self, graph, labels=False):
