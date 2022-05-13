@@ -26,11 +26,21 @@ datatypes = {XSD.string: 'STRING',
              XSD.decimal: 'FLOAT',
              XSD.double: 'FLOAT'}
 
+def chop(uriref):
+    if '#' in uriref:
+        return uriref.toPython().split("#")[-1]
+    elif '/' in uriref:
+        return uriref.toPython().split("/")[-1]
+    else:
+        return uriref
+
 def get_label(uri, graph):
     label = None
     name = graph.objects(uri, RDFS.label)
     for n in name:
-            label = n    
+            label = n   
+    if label is None:
+        label = chop(uri)
     return label
 
 class owlobject:
@@ -287,8 +297,12 @@ class owlinstance(owlobject):
                 curi = c
 
         iclass_name = graph.objects(curi, RDFS.label)
+
+
         for n in iclass_name:
             self.iclass_label = n.replace(' ', '_') 
+        if self.iclass_label is None:
+            self.iclass_label = self.chop(curi)
 
         # If individual has no class something is wrong
         if self.iclass is None:
