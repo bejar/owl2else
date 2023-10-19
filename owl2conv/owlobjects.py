@@ -291,13 +291,15 @@ class owlinstance(owlobject):
         iclass = graph.objects(self.uriref, RDF.type)
 
         # Selects the class for the instance skipping OWL.NamedIndividual
+        curi = None
         for c in iclass:
             if c != OWL.NamedIndividual:
                 self.iclass = self.chop(c)
                 curi = c
 
+        if curi is None:
+            raise NameError(f'Instance {self.name} has no class!!!')
         iclass_name = graph.objects(curi, RDFS.label)
-
 
         for n in iclass_name:
             self.iclass_label = n.replace(' ', '_') 
