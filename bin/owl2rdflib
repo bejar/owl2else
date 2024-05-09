@@ -23,20 +23,21 @@ import argparse
 import time
 
 from rdflib import Graph, RDF, OWL, URIRef
+from owl2conv.owlobjects import chop, get_label
 
 
-def chop(uriref):
-    """
-    returns the last part of the uriref
-    :param uriref:
-    :return:
-    """
-    if '#' in uriref:
-        return uriref.toPython().split("#")[-1]
-    elif '/' in uriref:
-        return uriref.toPython().split("/")[-1]
-    else:
-        return uriref
+# def chop(uriref):
+#     """
+#     returns the last part of the uriref
+#     :param uriref:
+#     :return:
+#     """
+#     if '#' in uriref:
+#         return uriref.toPython().split("#")[-1]
+#     elif '/' in uriref:
+#         return uriref.toPython().split("/")[-1]
+#     else:
+#         return uriref
 
 
 def print_vocabulary(f, voc, last):
@@ -62,6 +63,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', required=True, help='Input file')
     parser.add_argument('--output', default=None, help='Output file')
+    parser.add_argument('--labels',  action='store_true', default=False, help='use labels for generating names')
     parser.add_argument('--format', required=True, choices=['xml', 'turtle'], help='File format')
 
     args = parser.parse_args()
@@ -74,10 +76,16 @@ if __name__ == '__main__':
 
     g.parse(args.input, format=args.format)
 
-    cls = [chop(c) for c in g.subjects(RDF.type, OWL.Class) if c != OWL.Thing and isinstance(c, URIRef)]
-    opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef)]
-    dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty) if isinstance(c, URIRef)]
-    inst = [chop(c) for c in g.subjects(RDF.type, OWL.NamedIndividual) if isinstance(c, URIRef)]
+    if args.labels:
+        cls = [get_label(c, g) for c in g.subjects(RDF.type, OWL.Class) if c != OWL.Thing and isinstance(c, URIRef)]
+        opr = [get_label(c, g) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef)]
+        dpr = [get_label(c, g) for c in g.subjects(RDF.type, OWL.DatatypeProperty) if isinstance(c, URIRef)]
+        inst = [get_label(c, g) for c in g.subjects(RDF.type, OWL.NamedIndividual) if isinstance(c, URIRef)]
+    else:
+        cls = [chop(c) for c in g.subjects(RDF.type, OWL.Class) if c != OWL.Thing and isinstance(c, URIRef)]
+        opr = [chop(c) for c in g.subjects(RDF.type, OWL.ObjectProperty) if isinstance(c, URIRef)]
+        dpr = [chop(c) for c in g.subjects(RDF.type, OWL.DatatypeProperty) if isinstance(c, URIRef)]
+        inst = [chop(c) for c in g.subjects(RDF.type, OWL.NamedIndividual) if isinstance(c, URIRef)]
 
     onto = [c for c in g.subjects(RDF.type, OWL.Ontology)]
 
